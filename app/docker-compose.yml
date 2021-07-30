@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+  app:
+    container_name: app
+    build: .
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - .:/usr/app
+    ports:
+      - ${APP_PORT}:${APP_PORT}
+    depends_on:
+      - mysql
+    links:
+      - mysql
+    command: npm run dev
+
+  mysql:
+    container_name: mysql
+    image: mysql:5.7
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${NEXT_PUBLIC_DB_DATABASE}
+      MYSQL_USER: ${NEXT_PUBLIC_DB_USER}
+      MYSQL_PASSWORD: ${NEXT_PUBLIC_DB_PASS}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+    ports:
+      - ${NEXT_PUBLIC_DB_PORT}:3306
+volumes:
+  mysql-data:
