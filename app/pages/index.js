@@ -1,13 +1,21 @@
 import Head from 'next/head'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-export default function Home({data, url}) {
+export default function Home({url}) {
   
   const [items, setItems] = useState(data);
   const [textName, setTextName] = useState('');
   const [textDescription, setTextDescription] = useState('');
   const [msg, setMsg] = useState('');
 
+  useEffect(()=>{
+    const getData = async()=>{
+      const res = await fetch(`http://${url}/api/items`);
+      const _items = await res.json()
+      setItems(_items);
+    }
+    getData();
+  },[])
   const handleCreateItem = async()=>{
     setMsg('');
     if(textName=='' || textDescription==''){
@@ -165,8 +173,8 @@ export async function getServerSideProps(context) {
   const {req} = context;
   console.log(req.headers.host);
   const url = req.headers.host;
-  const res = await fetch(`http://${url}/api/items`);
-  const data = await res.json()
-  console.log(data);
-  return { props: { data, url } }
+  //const res = await fetch(`http://${url}/api/items`);
+  //const data = await res.json()
+  //console.log(data);
+  return { props: { url } }
 }
