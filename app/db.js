@@ -20,7 +20,19 @@ const conectDb = async()=>{
       "`description` varchar(220) CHARACTER SET utf8 NOT NULL,"+
       "PRIMARY KEY (`id`)"+
       ")";
-    const warning = await connection.query(`CREATE TABLE IF NOT EXISTS ${process.env.NEXT_PUBLIC_DB_TABLE} ${querryCreateTable}`);
+
+    const querryCreateTableUsers= "("+
+    "`id` INT NOT NULL AUTO_INCREMENT,"+
+    "`username` VARCHAR(45) NOT NULL,"+
+    "`email` VARCHAR(45) NOT NULL,"+
+    "`password` VARCHAR(45) NOT NULL,"+
+    "PRIMARY KEY (`id`),"+
+    "UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,"+
+    "UNIQUE INDEX `username_UNIQUE` (`username` ASC) VISIBLE,"+
+    "UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE);"
+    await connection.query(`CREATE TABLE IF NOT EXISTS ${process.env.NEXT_PUBLIC_DB_TABLE} ${querryCreateTable}`);
+    await connection.query(`CREATE TABLE IF NOT EXISTS users ${querryCreateTableUsers}`);
+    
     return connection;
   }catch(err){
     console.log("erro ao se conectar com mySql: " + err);
@@ -66,4 +78,41 @@ const deleteItem = async({
     return {status: false};
   }
 }
-module.exports={getAll, createItem, deleteItem}
+
+const createUser = async({
+  name, 
+  email,
+  pass
+})=>{
+  try{
+    const db = await conectDb();
+    const [rowns] = await db.query(`INSERT INTO users (username, email, password) VALUES ("${name}", "${email}", "${pass}")`);
+    if(rowns.affectedRows>0){
+      return {status: true, id: rowns.insertId};
+    }else{
+      return {status: false, msg: 'Algo deu errado. Tente novamente mais tarde'};
+    }
+  }catch(err){
+    console.log("erro ao criar usuario: " + err);
+    return {status: false, msg: err.sqlMessage};
+  }
+}
+const findUser = async({
+  text,
+  pass
+})=>{
+  try{
+    console.log("find user");
+    const db = await conectDb();
+    const [rowns] = await db.query(`SELECT * FROM users WHERE (username = "${text}" OR email = "${text}") AND password = "${pass}"`);
+    if(rowns.length>0){
+      return {status: true, data: rowns[0]};
+    }else{
+      return {status: false, msg: "Usuário ou senha incorretos"};
+    }
+  }catch(error){
+    console.log("erro ao procurar usuario: " + err);
+    return {status: false, msg: err.sqlMessage};
+  }
+}
+module.exports={getAll, createItem, deleteItem, createUser, findUser}
