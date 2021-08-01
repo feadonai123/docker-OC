@@ -9,7 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "bcrypt": "^5.0.1",
+    "cookie-cutter": "^0.2.0",
+    "cookies": "^0.8.0",
     "dotenv": "^10.0.0",
+    "jsonwebtoken": "^8.5.1",
     "mysql2": "^2.2.5",
     "next": "11.0.1",
     "react": "17.0.2",

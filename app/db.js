@@ -1,7 +1,9 @@
+const bcrypt = require('bcrypt');
 var connected = '';
 const conectDb = async()=>{
   const mysql = require('mysql2/promise');
   if(connected!=='' && connected.state !== 'disconnected'){
+    console.log("ja estamos conectado ao MySql");
     return connected;
   }
   try{
@@ -18,6 +20,7 @@ const conectDb = async()=>{
       "`id` int NOT NULL AUTO_INCREMENT,"+
       "`name` varchar(220) CHARACTER SET utf8 NOT NULL,"+
       "`description` varchar(220) CHARACTER SET utf8 NOT NULL,"+
+      "`username` varchar(45) CHARACTER SET utf8 NOT NULL,"+
       "PRIMARY KEY (`id`)"+
       ")";
 
@@ -25,7 +28,7 @@ const conectDb = async()=>{
     "`id` INT NOT NULL AUTO_INCREMENT,"+
     "`username` VARCHAR(45) NOT NULL,"+
     "`email` VARCHAR(45) NOT NULL,"+
-    "`password` VARCHAR(45) NOT NULL,"+
+    "`password` VARCHAR(220) NOT NULL,"+
     "PRIMARY KEY (`id`),"+
     "UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,"+
     "UNIQUE INDEX `username_UNIQUE` (`username` ASC) VISIBLE,"+
@@ -38,7 +41,6 @@ const conectDb = async()=>{
     console.log("erro ao se conectar com mySql: " + err);
   }
 }
-conectDb();
 
 const getAll = async()=>{
   const db = await conectDb();
@@ -48,11 +50,12 @@ const getAll = async()=>{
 
 const createItem = async({
   name, 
-  description
+  description,
+  username
 })=>{
   try{
     const db = await conectDb();
-    const [rowns] = await db.query(`INSERT INTO ${process.env.NEXT_PUBLIC_DB_TABLE} (name, description) VALUES ("${name}", "${description}")`);
+    const [rowns] = await db.query(`INSERT INTO ${process.env.NEXT_PUBLIC_DB_TABLE} (name, description, username) VALUES ("${name}", "${description}", "${username}")`);
     if(rowns.affectedRows>0){
       return {status: true, id: rowns.insertId};
     }else{
@@ -104,9 +107,15 @@ const findUser = async({
   try{
     console.log("find user");
     const db = await conectDb();
-    const [rowns] = await db.query(`SELECT * FROM users WHERE (username = "${text}" OR email = "${text}") AND password = "${pass}"`);
+    const [rowns] = await db.query(`SELECT * FROM users WHERE (username = "${text}" OR email = "${text}")`);
     if(rowns.length>0){
-      return {status: true, data: rowns[0]};
+      const isValidPass = await bcrypt.compare(pass, rowns[0].password);
+      console.log("senha valiuda: " + isValidPass);
+      if(isValidPass){
+        return {status: true, data: rowns[0]};
+      }else{
+        return {status: false, msg: "Usuário ou senha incorretos"};
+      }
     }else{
       return {status: false, msg: "Usuário ou senha incorretos"};
     }
@@ -115,4 +124,22 @@ const findUser = async({
     return {status: false, msg: err.sqlMessage};
   }
 }
-module.exports={getAll, createItem, deleteItem, createUser, findUser}
+
+const findUserByToken = async({
+  username
+})=>{
+  try{
+    console.log("find user by token");
+    const db = await conectDb();
+    const [rowns] = await db.query(`SELECT * FROM users WHERE (username = "${username}")`);
+    if(rowns.length>0){
+      return {status: true, data: rowns[0]};
+    }else{
+      return {status: false, msg: "Token invalido"};
+    }
+  }catch(error){
+    console.log("erro ao procurar usuario via token: " + err);
+    return {status: false, msg: err.sqlMessage};
+  }
+}
+module.exports={getAll, createItem, deleteItem, createUser, findUser, findUserByToken}

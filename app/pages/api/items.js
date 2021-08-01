@@ -1,12 +1,15 @@
 const db = require('../../db');
+const jwt = require('jsonwebtoken');
+
 
 const Items = async(req, res)=>{
   try{
     let response;
     if (req.method === 'POST') {
       // Cria item
+      const tokenData = jwt.verify(req.headers.token, process.env.NEXT_PUBLIC_JWT_SECRET);
       console.log("criar item...");
-      response = await createItem(req.body);
+      response = await createItem(req.body, tokenData.username);
     }else if(req.method === 'GET'){
       // Pega item
       console.log("pegar items...");
@@ -25,11 +28,12 @@ const Items = async(req, res)=>{
 }
 
 
-const createItem = async(body)=>{
+const createItem = async(body, username)=>{
   const {name, description} = body;
   const response = await db.createItem({
     name: name,
     description: description,
+    username: username
   });
   return(response);
 }

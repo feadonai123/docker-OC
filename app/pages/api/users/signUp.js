@@ -1,4 +1,5 @@
 const db = require('../../../db');
+const bcrypt = require('bcrypt');
 
 const SignUp = async(req, res) => {
   try{
@@ -19,10 +20,15 @@ const SignUp = async(req, res) => {
 const createUser = async (data)=>{
   const {email, username, pass} = data;
   console.log(`criando usuario: ${email}, ${username}`);
+  const salt = bcrypt.genSaltSync();
+  console.log("passo1");
+  const passHash = bcrypt.hashSync(pass, salt);
+  console.log(passHash);
+  console.log("aqui");
   const response = await db.createUser({
     name: username,
     email: email,
-    pass: pass,
+    pass: passHash,
   })
   return response;
 }

@@ -163,7 +163,7 @@ const signUp = ({url})=>{
             />
             <input 
               type="button" 
-              value="Cancelar"
+              value="Voltar"
               style={{
                 marginTop: '20px', 
                 borderRadius: '20px', 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useUser } from "../hoocks/userContext";
 import Router from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
@@ -7,6 +8,7 @@ const signIn = ({url})=>{
   const [text, setText] = useState('');
   const [msgError, setMsgError] = useState("");
   const [pass, setPass] = useState('');
+  const {login} = useUser();
 
   const handleSubmit = async(event)=>{
     console.log("Clicado em Login");
@@ -17,14 +19,14 @@ const signIn = ({url})=>{
       return;
     }
     console.log("logando...");
-    const res = await fetch(`http://${url}/api/users/signIn?`+ new URLSearchParams({
+    const response = await login({
       text: text,
       pass: pass,
-    }))
-    const response = await res.json();
+      url: url,
+    });
     console.log(response);
     if(response.status){
-      Router.push('/')
+      Router.push('/');
     }else{
       setMsgError(`ERRO: ${response.msg}`);
     }
