@@ -19,7 +19,7 @@ const conectDb = async()=>{
     const querryCreateTable = "("+
       "`id` int NOT NULL AUTO_INCREMENT,"+
       "`name` varchar(220) CHARACTER SET utf8 NOT NULL,"+
-      "`description` varchar(220) CHARACTER SET utf8 NOT NULL,"+
+      "`description` varchar(1000) CHARACTER SET utf8 NOT NULL,"+
       "`username` varchar(45) CHARACTER SET utf8 NOT NULL,"+
       "PRIMARY KEY (`id`)"+
       ")";
