@@ -262,7 +262,14 @@ export async function getServerSideProps(context) {
         httpOnly: false
       })
       return { props: { url : url, user : response.data, token_: token } }
-    }    
+    }else{
+      return { 
+        redirect: {
+          destination: '/signIn',
+          permanent: false,
+        },
+      }
+    }  
   }
   return { 
     redirect: {

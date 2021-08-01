@@ -30,9 +30,9 @@ const conectDb = async()=>{
     "`email` VARCHAR(45) NOT NULL,"+
     "`password` VARCHAR(220) NOT NULL,"+
     "PRIMARY KEY (`id`),"+
-    "UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE,"+
-    "UNIQUE INDEX `username_UNIQUE` (`username` ASC) VISIBLE,"+
-    "UNIQUE INDEX `email_UNIQUE` (`email` ASC) VISIBLE);"
+    "UNIQUE INDEX `id_UNIQUE` (`id` ASC),"+
+    "UNIQUE INDEX `username_UNIQUE` (`username` ASC),"+
+    "UNIQUE INDEX `email_UNIQUE` (`email` ASC));"
     await connection.query(`CREATE TABLE IF NOT EXISTS ${process.env.NEXT_PUBLIC_DB_TABLE} ${querryCreateTable}`);
     await connection.query(`CREATE TABLE IF NOT EXISTS users ${querryCreateTableUsers}`);
     
