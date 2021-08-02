@@ -1,8 +1,10 @@
 import { useState } from "react";
 import Router from 'next/router'
 import Head from 'next/head'
+const URL = process.env.NEXT_PUBLIC_APP_URL;
 
-const signUp = ({url})=>{
+
+const SignUp = ()=>{
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [msgError, setMsgError] = useState("");
@@ -10,23 +12,30 @@ const signUp = ({url})=>{
   const [pass2, setPass2] = useState('');
 
   const handleSubmit = async(event)=>{
-    console.log("CLicado em registrar");
+    console.log("==========inicio signUp handleSubmit================")
+    console.log("Clicado em registrar");
     event.preventDefault();
     setMsgError('');
     if(email==='' || username===''){
+      console.log("Preencha todos os campos");
+      console.log("============fim signUp handleSubmit=============")
       setMsgError('*Preencha todos os campos');
       return;
     }
     if(pass!==pass2){
+      console.log("As senhas digitadas não coincidem");
+      console.log("============fim signUp handleSubmit=============")
       setMsgError('*As senhas digitadas não coincidem');
       return;
     }
     if(pass.length<8){
+      console.log("A senha precisa ter mais de 8 caracteres");
+      console.log("============fim signUp handleSubmit=============")
       setMsgError('*A senha precisa ter mais de 8 caracteres');
       return;
     }
-    console.log("registrando...");
-    const res = await fetch(`http://${url}/api/users/signUp`, {
+    console.log("acesso a API");
+    const res = await fetch(`http://${URL}/api/users/signUp`, {
       method: 'POST',
       body: JSON.stringify({ 
         email: email,
@@ -36,16 +45,21 @@ const signUp = ({url})=>{
       headers: { 'Content-Type': 'application/json' },
     })
     const response = await res.json();
+    console.log("resposta:");
     console.log(response);
     if(response.status){
+      console.log("usuario criado");
       setMsgError(`"${username}" foi registrado com sucesso`);
     }else{
+      console.log("usuario n criado;");
+      console.log(response.msg);
       setMsgError(`ERRO: ${response.msg}`);
     }
     setEmail('');
     setUsername('');
     setPass('');
     setPass2('');
+    console.log("============fim signUp handleSubmit=============")
   }
   return(
     <div style={{
@@ -190,12 +204,13 @@ const signUp = ({url})=>{
 <label>Anexo</label>
 <input type="file" id="anexo" name="anexo" />
 */
-export default signUp;
+export default SignUp;
 
-export async function getServerSideProps(context) {
+/*
+export async function getStaticProps(context) {
   
   const {req} = context;
   console.log(req.headers.host);
   const url = req.headers.host;
   return { props: { url } }
-}
+}*/

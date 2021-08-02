@@ -15,7 +15,6 @@ services:
       - mysql
     links:
       - mysql
-    command: npm run dev
 
   mysql:
     container_name: mysql

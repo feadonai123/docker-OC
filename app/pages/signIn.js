@@ -4,30 +4,40 @@ import Router from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
 
-const signIn = ({url})=>{
+const URL = process.env.NEXT_PUBLIC_APP_URL;
+
+const SignIn = ()=>{
   const [text, setText] = useState('');
   const [msgError, setMsgError] = useState("");
   const [pass, setPass] = useState('');
   const {login} = useUser();
 
   const handleSubmit = async(event)=>{
+    console.log("========inicio signIn handleSubmit==========")
     console.log("Clicado em Login");
     event.preventDefault();
     setMsgError('');
     if(text==='' || pass===''){
+      console.log("Preencha todos os campos")
+      console.log("========fim signIn handleSubmit==========")
       setMsgError('*Preencha todos os campos');
       return;
     }
-    console.log("logando...");
+    console.log("acesso a API");
     const response = await login({
       text: text,
       pass: pass,
-      url: url,
     });
+    console.log("resposta a ter usuario:")
     console.log(response);
     if(response.status){
+      console.log("usuario existente");
+      console.log("redirecionando para home")
+      console.log("========fim signIn handleSubmit==========")
       Router.push('/');
     }else{
+      console.log("usuario inexistente");
+      console.log("========fim signIn handleSubmit==========")
       setMsgError(`ERRO: ${response.msg}`);
     }
     setText('');
@@ -123,12 +133,13 @@ const signIn = ({url})=>{
 <label>Anexo</label>
 <input type="file" id="anexo" name="anexo" />
 */
-export default signIn;
+export default SignIn;
 
-export async function getServerSideProps(context) {
+/*
+export async function getStaticProps(context) {
   
   const {req} = context;
   console.log(req.headers.host);
   const url = req.headers.host;
-  return { props: { url } }
-}
+  return { props: {} }
+}*/

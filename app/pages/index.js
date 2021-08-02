@@ -2,31 +2,40 @@ import Head from 'next/head'
 import Cookies from 'cookies'
 import { useEffect, useState } from 'react'
 import { useUser } from '../hoocks/userContext';
+import {checkToken} from './api/users/signIn';
+import {getAllItem} from './api/items'
 
-export default function Home({url, user={}, token_ = ''}) {
+const URL = process.env.NEXT_PUBLIC_APP_URL;
+
+export default function Home({ user={}, token_ = '', items_ = []}) {
   
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(items_);
   const [textName, setTextName] = useState('');
   const [textDescription, setTextDescription] = useState('');
   const [msg, setMsg] = useState('');
   const {updateData, userName, email, id, logOut, token} = useUser();
   useEffect(()=>{
-    const getData = async()=>{
-      const res = await fetch(`http://${url}/api/items`);
+    console.log("========USEEFFECT Home===================")
+    /*const getData = async()=>{
+      console.log("Buscando items...");
+      const res = await fetch(`http://${URL}/api/items`);
       const _items = await res.json()
+      console.log(_items);
       setItems(_items);
+      console.log("fim buscando items");
     }
-    getData();
+    getData();*/
     if(user!=={}){
-      console.log("Atualizando user: " + user.username);
-      console.log(token_)
+      console.log("Atualizando contexto usuário");
       updateData({
         name: user.username,
         email: user.email,
         id: user.id,
         token: token_,
       });
+      console.log("Atualizado com sucesso");
     }
+    console.log("=============FIM USEEFFECT HOME===========");
   },[])
   const handleCreateItem = async()=>{
     setMsg('');
@@ -34,8 +43,7 @@ export default function Home({url, user={}, token_ = ''}) {
       setMsg("*Preencha todos os campos");
       return;
     }
-    console.log("clicou em criar item");
-    const res = await fetch(`http://${url}/api/items`, {
+    const res = await fetch(`http://${URL}/api/items`, {
       method: 'POST',
       body: JSON.stringify({ 
         name: textName,
@@ -47,7 +55,6 @@ export default function Home({url, user={}, token_ = ''}) {
       },
     })
     const response = await res.json();
-    console.log(response);
     if(response.status){
       setMsg(`${textName} criado com sucesso!`);
       setItems([...items, {name: textName, description: textDescription, id: response.id, username: userName}])
@@ -58,8 +65,7 @@ export default function Home({url, user={}, token_ = ''}) {
     setTextDescription('');
   }
   const handleDeleteItem = async (id, name)=>{
-    console.log("clicou em Deletar item");
-    const res = await fetch(`http://${url}/api/items`, {
+    const res = await fetch(`http://${URL}/api/items`, {
       method: 'DELETE',
       body: JSON.stringify({ 
         id: id,
@@ -111,7 +117,6 @@ export default function Home({url, user={}, token_ = ''}) {
         flexDirection: 'column',  
         padding: '50px',
         backgroundColor: '#f71',
-        
       }}>
         <Head>
           <title>Home</title>
@@ -176,11 +181,8 @@ export default function Home({url, user={}, token_ = ''}) {
         </div>
         <div>
           {items.length>0 && items.map((item)=>{
-            console.log("banco: " + item.id)
-            console.log("meu: " + id)
-
             return(
-              <div style={{display: 'flex', flexDirection: 'column'}}>
+              <div style={{display: 'flex', flexDirection: 'column'}} key={item.id}>
                 <h1 style={{
                   margin: 0,     
                   position: 'absolute',
@@ -191,7 +193,7 @@ export default function Home({url, user={}, token_ = ''}) {
                   borderTopLeftRadius: '20px',
                   borderTopRightRadius: '20px',
                 }}>{item.username}</h1>
-                <div key={item.id} style={{
+                <div style={{
                   margin: '20px 0',
                   backgroundColor: item.username===userName?'#f71':'aliceblue',
                   display: 'flex',
@@ -235,42 +237,58 @@ export default function Home({url, user={}, token_ = ''}) {
 }
 
 export async function getServerSideProps(context) {
-  console.log("getServerSideProps")
+  console.log("=========getServerSideProps home==============")
   const {req, res} = context;
-  console.log(req.headers.host);
-  const url = req.headers.host;
-  //const res = await fetch(`http://${url}/api/items`);
-  //const data = await res.json()
-  //console.log(data);
+  console.log("Checar TOKEN:")
   const cookies = new Cookies(req, res)
   const token = cookies.get('token')
-  console.log("verificando token: " + token)
   if(token){
-    console.log("token existente");
-    const res = await fetch(`http://${url}/api/users/signIn`, {
-      method: 'POST',
-      body: JSON.stringify({ 
-        token: token,
-      }),
-      headers: { 'Content-Type': 'application/json' },
-    })
-    const response = await res.json();
-    console.log("resposta: ");
+    console.log(" token existe")
+    console.log("Checar token valido:")
+    const response = await checkToken({token: token});
+    console.log(" -RESPOSTA: ");
     console.log(response);
     if(response.status){
+      console.log("Token valido");
       cookies.set('token', token, {
         httpOnly: false
       })
-      return { props: { url : url, user : response.data, token_: token } }
+      console.log("token salvo");
+      console.log("pegando dados do banco")
+      const items = await getAllItem();
+      const _items = items.map(item=>{
+        return {
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          username: item.username
+        }
+      })
+      console.log(_items);
+      console.log("Continuar caminho para /");
+      console.log("=========FIM getServerSideProps home==============")
+      return { 
+        props: { user : {
+          username: response.data.username,
+          email: response.data.email,
+          id: response.data.id,
+        }, token_: token, items_: _items },
+      }
     }else{
+      console.log("Token invalido");
+      console.log("REDIRECIONAR PARA /signIn");
+      console.log("=========FIM getServerSideProps home==============")
       return { 
         redirect: {
           destination: '/signIn',
           permanent: false,
         },
       }
-    }  
+    }
   }
+  console.log("token inexistente")
+  console.log("redirecinar para /signIn")
+  console.log("=========FIM getServerSideProps home==============")
   return { 
     redirect: {
       destination: '/signIn',
